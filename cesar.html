@@ -15,7 +15,7 @@
         document.getElementById("userInput").addEventListener("input", async function() {
             let query = this.value;
             try {
-                let response = await fetch(`/cesar-label?message=${query}`);
+                let response = await fetch(`{{.Call}}?message=${query}`);
                 let data = await response.text();
                 document.getElementById("output").innerHTML = data;
             } catch (error) {
