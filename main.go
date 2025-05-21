@@ -11,6 +11,8 @@ type PageData struct {
 	Title string
     Message string
 	Call string
+	BtnCall string
+	Btn string
 }
 
 // HTMLs
@@ -80,12 +82,22 @@ func cesarDecryptHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func cesarEncryptPageHandler(w http.ResponseWriter, r *http.Request) {
-    data := PageData{Title: "Criptografar Cifra de Cesar", Call: "/cesar-lock"}
+    data := PageData{
+		Title: "Criptografar Cifra de Cesar",
+		Call: "/cesar-lock",
+		BtnCall: "/cesar/decrypt",
+		Btn: "Decriptar",
+	}
     cesar.Execute(w, data)
 }
 
 func cesarDecryptPageHandler(w http.ResponseWriter, r *http.Request) {
-    data := PageData{Title: "Desencriptação Cifra de Cesar",  Call: "/cesar-unlock"}
+    data := PageData{
+		Title: "Desencriptação Cifra de Cesar",
+		Call: "/cesar-unlock",
+		BtnCall: "/cesar/encrypt",
+		Btn: "Encriptar",
+	}
     cesar.Execute(w, data)
 }
 
