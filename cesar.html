@@ -22,15 +22,36 @@
         </a>
     </div>
 
-    <h1 class="text-2xl font-bold text-gray-800">{{.Title}}</h1>
+    <div class="w-80 rounded-lg shadow-lg px-6 pb-10 pt-4">
+        <div class="mb-3">
+            <h1 class="text-2xl font-bold text-gray-800">{{.Title}}</h1>
+            <p class="text-sm text-gray-400">{{.Description}}</p>
+        </div>
+        <div>
+            <div>
+                <textarea id="userInput" class="w-full p-3 border rounded-lg bg-gray-200" placeholder="Enter your text here..."></textarea>
+            </div>
 
-    <input type="text" id="userInput" class="mt-4 p-2 border border-gray-400 rounded-md" placeholder="Digite algo...">
+            <div class="flex items-center gap-4 mt-4">
+                <p>Fator: </p>
+                <div>
+                    <button onclick="decrement()" class="p-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition">
+                        <i class="bi bi-dash-lg"></i>
+                    </button>
+                    <input type="number" id="numericInput" class="w-16 text-center p-2 border border-gray-400 rounded-md" value="{{.CesarFactor}}">
+                    <button onclick="increment()" class="p-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                </div>
+            </div>
 
-    <div class="flex items-center gap-4 mt-4">
-        <p id="output" class="text-lg text-gray-700 bg-gray-200 p-4 rounded-md w-64 text-center border border-gray-400"></p>
-        <button onclick="copyToClipboard()" class="p-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition">
-            <i class="bi bi-clipboard"></i>
-        </button>
+            <div class="flex items-center gap-4 mt-4">
+                <textarea id="output" class="w-full p-3 border rounded-lg bg-gray-200" placeholder="Output will appear here..." readonly></textarea>
+                <button onclick="copyToClipboard()" class="p-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Toast de aviso -->
@@ -40,23 +61,43 @@
 
     <script>
         document.getElementById("userInput").addEventListener("input", async function() {
-            let query = this.value;
+            call(this.value, document.getElementById("numericInput").value);
+        });
+
+        async function call(query, factor) {
             try {
-                let response = await fetch(`{{.Call}}?message=${query}`);
+                let response = await fetch(`{{.Call}}?message=${query}&factor=${factor}`);
                 let data = await response.text();
                 document.getElementById("output").innerHTML = data;
             } catch (error) {
                 document.getElementById("output").textContent = "Erro ao buscar dados.";
             }
-        });
+        }
 
         function copyToClipboard() {
             let outputText = document.getElementById("output").innerText;
+            
             navigator.clipboard.writeText(outputText).then(() => {
                 let toast = document.getElementById("toast");
                 toast.classList.remove("opacity-0");
                 setTimeout(() => toast.classList.add("opacity-0"), 2000);
             }).catch(err => console.error("Erro ao copiar:", err));
+        }
+
+        async function increment() {
+            let numericInput = document.getElementById("numericInput");
+            numericInput.value = parseInt(numericInput.value) + 1;
+            let query = document.getElementById("userInput");
+
+            call(query.value, numericInput.value)
+        }
+
+        async function decrement() {
+            let numericInput = document.getElementById("numericInput");
+            numericInput.value = parseInt(numericInput.value) - 1;
+            let query = document.getElementById("userInput");
+
+            call(query.value, numericInput.value)
         }
     </script>
 </body>

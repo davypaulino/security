@@ -1,91 +1,61 @@
 package main
 
 import (
-    "html/template"
-    "net/http"
-	"os"
-	"strconv"
+	"html/template"
+	"net/http"
 )
 
 type PageData struct {
 	Title string
     Message string
+	Description string
+	CesarFactor int
 	Call string
 	BtnCall string
+	CallBreak string
 	Btn string
 }
 
 // HTMLs
 var cesar = template.Must(template.ParseFiles("cesar.html"))
-var cesarCipher = template.Must(template.ParseFiles("cesar-cipher.html"))
+var vigenere = template.Must(template.ParseFiles("vigenere.html"))
+var cryptLabel = template.Must(template.ParseFiles("crypto-label.html"))
 var index = template.Must(template.ParseFiles("index.html"))
 
-// Pegando os Valores das váriaveis de ambiente
-var cesarFactor = func() int {
-    factor := os.Getenv("CESARCYPHER")
-    shift := 3
-
-    if factor != "" {
-        parsedFactor, err := strconv.Atoi(factor)
-        if err == nil {
-            shift = parsedFactor
-        }
-    }
-
-    return shift
-}()
-
-// encrypt e decrypt da cifra de cesar
-func encryptCesar(m string) string {
-    encrypted := ""
-    for _, c := range m {
-        if c >= 'A' && c <= 'Z' {
-            encrypted += string(( (c - 'A' + rune(cesarFactor)) % 26 + 'A'))
-		} else if c >= 'a' && c <= 'z' {
-            encrypted += string(( (c - 'a' + rune(cesarFactor)) % 26 + 'a'))
-        } else {
-            encrypted += string(c)
-        }
-    }
-
-    return encrypted
-}
-
-func decryptCesar(m string) string {
-    decrypted := ""
-    for _, c := range m {
-        if c >= 'A' && c <= 'Z' {
-            decrypted += string(( (c - 'A' - rune(cesarFactor) + 26) % 26 + 'A'))
-		} else if c >= 'a' && c <= 'z' {
-            decrypted += string(( (c - 'a' - rune(cesarFactor) + 26) % 26 + 'a'))
-        } else {
-            decrypted += string(c)
-        }
-    }
-
-    return decrypted
-}
-
-// Handler Html
+// Cripto Endpoints
 func cesarEncryptHandler(w http.ResponseWriter, r *http.Request) {
-	params := r.URL.Query()
-	cesarMessage := encryptCesar(params.Get("message"))
-	data := PageData{Message: cesarMessage}
-	cesarCipher.Execute(w, data)
+	data := cesarReadRequest(r, encryptFactor)
+	cryptLabel.Execute(w, data)
 }
 
 func cesarDecryptHandler(w http.ResponseWriter, r *http.Request) {
-	params := r.URL.Query()
-	cesarMessage := decryptCesar(params.Get("message"))
-	data := PageData{Message: cesarMessage}
-	cesarCipher.Execute(w, data)
+	data := cesarReadRequest(r, decryptFactor)
+	cryptLabel.Execute(w, data)
 }
 
+func vigenereEncryptHandler(w http.ResponseWriter, r *http.Request) {
+	params := r.URL.Query()
+	vigenereMessage := vigenereCipher(params.Get("message"), vigenereSecret, encryptFactor)
+	data := PageData{Message: vigenereMessage}
+	cryptLabel.Execute(w, data)
+}
+
+func vigenereDecryptHandler(w http.ResponseWriter, r *http.Request) {
+	params := r.URL.Query()
+	vigenereMessage := vigenereCipher(params.Get("message"), vigenereSecret, decryptFactor)
+	data := PageData{Message: vigenereMessage}
+	cryptLabel.Execute(w, data)
+}
+
+// Page Handlers
 func cesarEncryptPageHandler(w http.ResponseWriter, r *http.Request) {
     data := PageData{
 		Title: "Criptografar Cifra de Cesar",
+		Description: "",
+		CesarFactor: cesarFactor,
 		Call: "/cesar-lock",
 		BtnCall: "/cesar/decrypt",
+		CallBreak: "/cesar/break",
 		Btn: "Decriptar",
 	}
     cesar.Execute(w, data)
@@ -94,11 +64,32 @@ func cesarEncryptPageHandler(w http.ResponseWriter, r *http.Request) {
 func cesarDecryptPageHandler(w http.ResponseWriter, r *http.Request) {
     data := PageData{
 		Title: "Desencriptação Cifra de Cesar",
+		Description: "",
 		Call: "/cesar-unlock",
 		BtnCall: "/cesar/encrypt",
 		Btn: "Encriptar",
 	}
     cesar.Execute(w, data)
+}
+
+func vigenereEncryptPageHandler(w http.ResponseWriter, r *http.Request) {
+	data := PageData{
+		Title: "Criptografar Cifra de Vigenere",
+		Call: "/vigenere-lock",
+		BtnCall: "/vigenere/decrypt",
+		Btn: "Decriptar",
+	}
+	vigenere.Execute(w, data)
+}
+
+func vigenereDecryptPageHandler(w http.ResponseWriter, r *http.Request) {
+	data := PageData{
+		Title: "Criptografar Cifra de Vigenere",
+		Call: "/vigenere-unlock",
+		BtnCall: "/vigenere/encrypt",
+		Btn: "Encriptar",
+	}
+	vigenere.Execute(w, data)
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
@@ -107,10 +98,19 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// Cesar
 	http.HandleFunc("/cesar-lock", cesarEncryptHandler)
 	http.HandleFunc("/cesar-unlock", cesarDecryptHandler)
 	http.HandleFunc("/cesar/encrypt", cesarEncryptPageHandler)
 	http.HandleFunc("/cesar/decrypt", cesarDecryptPageHandler)
+	
+	// Vigenere
+	http.HandleFunc("/vigenere-lock", vigenereEncryptHandler)
+	http.HandleFunc("/vigenere-unlock", vigenereDecryptHandler)
+	http.HandleFunc("/vigenere/encrypt", vigenereEncryptPageHandler)
+	http.HandleFunc("/vigenere/decrypt", vigenereDecryptPageHandler)
+	
+	// Index
 	http.HandleFunc("/", indexHandler)
     http.ListenAndServe(":8080", nil)
 }
