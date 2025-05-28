@@ -29,18 +29,14 @@ func vigenereCipher(m, secret string, action func(rune, rune, rune) string) stri
 	}
 	
 	messageSize := len(m)
+	secretSize := len(secret)
 	m = strings.ToUpper(m)
 	secret = strings.ToUpper(secret)
-
-	for messageSize > len(secret) {
-		secret += secret
-	}
-	secret = secret[:messageSize]
 
     for i := range messageSize {
 		c := rune(m[i])
         
-		secretChar := rune(secret[i])
+		secretChar := rune(secret[i % secretSize])
 
         if c >= 'A' && c <= 'Z' && unicode.IsLetter(secretChar) {
             result += action('A', c, (secretChar - 'A') % 26)
