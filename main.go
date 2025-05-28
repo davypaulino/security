@@ -34,33 +34,60 @@ var vigenere = template.Must(template.ParseFiles("vigenere.html"))
 var cryptLabel = template.Must(template.ParseFiles("crypto-label.html"))
 var index = template.Must(template.ParseFiles("index.html"))
 
-// Cripto Endpoints
 func cesarEncryptHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+        http.Error(w, "Método não permitido. Use POST.", http.StatusMethodNotAllowed)
+        return
+    }
+	w.Header().Set("Content-Type", "application/json")
 	data := cesarReadRequest(r, encryptFactor)
-	cryptLabel.Execute(w, data)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+        http.Error(w, "Erro ao codificar JSON", http.StatusInternalServerError)
+    }
 }
 
 func cesarDecryptHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+        http.Error(w, "Método não permitido. Use POST.", http.StatusMethodNotAllowed)
+        return
+    }
+	w.Header().Set("Content-Type", "application/json")
 	data := cesarReadRequest(r, decryptFactor)
-	cryptLabel.Execute(w, data)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+        http.Error(w, "Erro ao codificar JSON", http.StatusInternalServerError)
+    }
+}
+
+type Request struct {
+    Message string   `json:"message"`
+    Letters []string `json:"letters"`
 }
 
 type Response struct {
-	Letters []string
-	Factors []int
+    Letters []string `json:"letters"`
+    Factors []int    `json:"factors"`
 }
 
 func cesarBreakHandler(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost {
+        http.Error(w, "Método não permitido. Use POST.", http.StatusMethodNotAllowed)
+        return
+    }
 
-	message := r.URL.Query().Get("message")
-
-    // Pegando o parâmetro "letters" e dividindo em um array
-    lettersParam := r.URL.Query().Get("letters")
-    letters := strings.Split(lettersParam, ",")
-
-	runes := trackFrequency(message)
-	result := generateFactors(runes, letters)
+    var req Request
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Erro ao ler JSON da requisição", http.StatusBadRequest)
+        return
+    }
+	
+    if req.Message == "" || len(req.Letters) == 0 {
+		http.Error(w, "Campos 'message' e 'letters' são obrigatórios", http.StatusBadRequest)
+        return
+    }
+	
+	w.Header().Set("Content-Type", "application/json")
+	runes := trackFrequency(req.Message)
+	result := generateFactors(runes, req.Letters)
 
 	responseData := Response{
         Letters: result.Letters,

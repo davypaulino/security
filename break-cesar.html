@@ -102,33 +102,44 @@
                 return;
             }
 
-            const queryString = `letters=${encodeURIComponent(letters.join(","))}`;
-            let response = await fetch(`{{.Call}}?message=${query}&${queryString}`);
-            let data = await response.json();
+            const bodyData = JSON.stringify({
+                message: query,
+                letters: letters
+            });
 
-            console.log(data)
             try {
-                document.getElementById("outputOption1").value = data.Letters[0] || "";
-                document.getElementById("outputOption2").value = data.Letters[1] || "";
-                document.getElementById("outputOption3").value = data.Letters[2] || "";
+                let response = await fetch(`{{.Call}}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: bodyData
+                });
 
-                document.getElementById("outputOption4").value = data.Factors[0] || "";
-                document.getElementById("outputOption5").value = data.Factors[1] || "";
-                document.getElementById("outputOption6").value = data.Factors[2] || "";
+                if (!response.ok) {
+                    throw new Error(`Erro: ${response.status}`);
+                }
+
+                let data = await response.json();
+
+                document.getElementById("outputOption1").value = data.letters[0] || "";
+                document.getElementById("outputOption2").value = data.letters[1] || "";
+                document.getElementById("outputOption3").value = data.letters[2] || "";
+
+                document.getElementById("outputOption4").value = data.factors[0] || "";
+                document.getElementById("outputOption5").value = data.factors[1] || "";
+                document.getElementById("outputOption6").value = data.factors[2] || "";
+
             } catch (error) {
-                console.error("Erro ao buscar dados:", error);
-                document.getElementById("output").textContent = "Erro ao buscar dados.";
+                toastError()
             }
+
         }
 
-        async function call(query, factor) {
-            try {
-                let response = await fetch(`{{.Call}}?message=${query}&factor=${factor}`);
-                let data = await response.text();
-                document.getElementById("output").innerHTML = data;
-            } catch (error) {
-                document.getElementById("output").textContent = "Erro ao buscar dados.";
-            }
+        function toastError() {
+            let toast = document.getElementById("toast-error");
+            toast.classList.remove("opacity-0");
+            setTimeout(() => toast.classList.add("opacity-0"), 2000);
         }
     </script>
 </body>

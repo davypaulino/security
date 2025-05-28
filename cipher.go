@@ -1,7 +1,7 @@
 package main
 
 type CipherMessage struct {
-	Message string
+    Message string `json:"message"`
 }
 
 func encryptFactor(start rune, c rune, factor rune) string {

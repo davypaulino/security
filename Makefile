@@ -3,7 +3,7 @@ FILES = cesar.go \
 		main.go \
 		cipher.go 
 
-all:
+all: build
 
 build:
 	go run $(FILES)

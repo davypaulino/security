@@ -42,7 +42,7 @@
                     <button onclick="decrement()" class="p-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition">
                         <i class="bi bi-dash-lg"></i>
                     </button>
-                    <input type="number" id="numericInput" class="w-16 text-center p-2 border border-gray-400 rounded-md" value="{{.CesarFactor}}">
+                    <input type="number" id="numericInput" class="w-16 text-center p-2 border border-gray-400 rounded-md" readonly value="{{.CesarFactor}}">
                     <button onclick="increment()" class="p-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition">
                         <i class="bi bi-plus-lg"></i>
                     </button>
@@ -63,6 +63,10 @@
         Copiado com sucesso!
     </div>
 
+    <div id="toast-error" class="fixed bottom-4 right-4 bg-red-600 text-white py-2 px-4 rounded-md opacity-0 transition-opacity">
+        Error ao Processar
+    </div>
+
     <script>
         document.getElementById("userInput").addEventListener("input", async function() {
             call(this.value, document.getElementById("numericInput").value);
@@ -70,11 +74,25 @@
 
         async function call(query, factor) {
             try {
-                let response = await fetch(`{{.Call}}?message=${query}&factor=${factor}`);
-                let data = await response.text();
-                document.getElementById("output").innerHTML = data;
+                let response = await fetch(`{{.Call}}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: query,
+                        factor: factor
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro: ${response.status}`);
+                }
+
+                let data = await response.json();
+                document.getElementById("output").innerHTML = data.message;
             } catch (error) {
-                document.getElementById("output").textContent = "Erro ao buscar dados.";
+                toastError()
             }
         }
 
@@ -102,6 +120,12 @@
             let query = document.getElementById("userInput");
 
             call(query.value, numericInput.value)
+        }
+
+        function toastError() {
+            let toast = document.getElementById("toast-error");
+            toast.classList.remove("opacity-0");
+            setTimeout(() => toast.classList.add("opacity-0"), 2000);
         }
     </script>
 </body>

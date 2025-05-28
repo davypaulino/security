@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"os"
 	"sort"
@@ -48,17 +49,26 @@ func cesarCipher(m string, action func(rune, rune, rune) string, factor int) str
     return result
 }
 
-func cesarReadRequest(r *http.Request, action func(rune, rune, rune) string) CipherMessage {
-    params := r.URL.Query()
-	message := strings.TrimSpace(params.Get("message"))
-	if message == "" {
-		return CipherMessage{}
-	}
+type CipherRequest struct {
+    Message string `json:"message"`
+    Factor  string `json:"factor"`
+}
 
-	newFactor, err := strconv.Atoi(params.Get("factor"))
-	if (err != nil) {
-		newFactor = cesarFactor
-	}
+func cesarReadRequest(r *http.Request, action func(rune, rune, rune) string) CipherMessage {
+    var req CipherRequest
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        return CipherMessage{}
+    }
+
+    message := strings.TrimSpace(req.Message)
+    if message == "" {
+        return CipherMessage{}
+    }
+
+    newFactor, err := strconv.Atoi(req.Factor)
+    if err != nil {
+        newFactor = cesarFactor
+    }
 
 	cesarMessage := cesarCipher(message, action, abs(newFactor))
     data := CipherMessage{Message: cesarMessage}
