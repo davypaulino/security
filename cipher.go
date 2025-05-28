@@ -1,5 +1,9 @@
 package main
 
+type CipherMessage struct {
+	Message string
+}
+
 func encryptFactor(start rune, c rune, factor rune) string {
 	return string(( (c - start + factor) % 26 + start))
 }

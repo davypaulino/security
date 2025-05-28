@@ -3,7 +3,17 @@ package main
 import (
 	"html/template"
 	"net/http"
+	"strings"
 )
+
+type VigenerePageData struct {
+	Title string
+	Description string
+	SecretKey string
+	Call string
+	BtnCall string
+	Btn string
+}
 
 type PageData struct {
 	Title string
@@ -35,36 +45,38 @@ func cesarDecryptHandler(w http.ResponseWriter, r *http.Request) {
 
 func vigenereEncryptHandler(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
-	vigenereMessage := vigenereCipher(params.Get("message"), vigenereSecret, encryptFactor)
-	data := PageData{Message: vigenereMessage}
+	message := strings.TrimSpace(params.Get("message"))
+	secret := strings.TrimSpace(params.Get("secret"))
+	data := CipherMessage{Message: vigenereCipher(message, secret, encryptFactor)}
 	cryptLabel.Execute(w, data)
 }
 
 func vigenereDecryptHandler(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
-	vigenereMessage := vigenereCipher(params.Get("message"), vigenereSecret, decryptFactor)
-	data := PageData{Message: vigenereMessage}
+	message := strings.TrimSpace(params.Get("message"))
+	secret := strings.TrimSpace(params.Get("secret"))
+	data := CipherMessage{Message: vigenereCipher(message, secret, decryptFactor)}
 	cryptLabel.Execute(w, data)
 }
 
 // Page Handlers
 func cesarEncryptPageHandler(w http.ResponseWriter, r *http.Request) {
-    data := PageData{
+    data := CesarPageData{
 		Title: "Criptografar Cifra de Cesar",
 		Description: "",
 		CesarFactor: cesarFactor,
 		Call: "/cesar-lock",
 		BtnCall: "/cesar/decrypt",
-		CallBreak: "/cesar/break",
 		Btn: "Decriptar",
 	}
     cesar.Execute(w, data)
 }
 
 func cesarDecryptPageHandler(w http.ResponseWriter, r *http.Request) {
-    data := PageData{
+    data := CesarPageData{
 		Title: "Desencriptação Cifra de Cesar",
 		Description: "",
+		CesarFactor: cesarFactor,
 		Call: "/cesar-unlock",
 		BtnCall: "/cesar/encrypt",
 		Btn: "Encriptar",
@@ -73,8 +85,10 @@ func cesarDecryptPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func vigenereEncryptPageHandler(w http.ResponseWriter, r *http.Request) {
-	data := PageData{
+	data := VigenerePageData{
 		Title: "Criptografar Cifra de Vigenere",
+		Description: "",
+		SecretKey: vigenereSecret,
 		Call: "/vigenere-lock",
 		BtnCall: "/vigenere/decrypt",
 		Btn: "Decriptar",
@@ -83,8 +97,10 @@ func vigenereEncryptPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func vigenereDecryptPageHandler(w http.ResponseWriter, r *http.Request) {
-	data := PageData{
+	data := VigenerePageData{
 		Title: "Criptografar Cifra de Vigenere",
+		Description: "",
+		SecretKey: vigenereSecret,
 		Call: "/vigenere-unlock",
 		BtnCall: "/vigenere/encrypt",
 		Btn: "Encriptar",

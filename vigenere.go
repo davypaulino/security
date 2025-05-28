@@ -19,11 +19,11 @@ var vigenereSecret = func() string {
 
 func vigenereCipher(m, secret string, action func(rune, rune, rune) string) string {
 	result := ""
-	messageSize := len(m)
-	if (len(secret) <= 0) {
+	if (strings.TrimSpace(secret) == "" || strings.TrimSpace(m) == "") {
 		return result;
 	}
-
+	
+	messageSize := len(m)
 	m = strings.ToUpper(m)
 	secret = strings.ToUpper(secret)
 
@@ -39,9 +39,7 @@ func vigenereCipher(m, secret string, action func(rune, rune, rune) string) stri
 
         if c >= 'A' && c <= 'Z' && unicode.IsLetter(secretChar) {
             result += action('A', c, (secretChar - 'A') % 26)
-		} else if c >= 'a' && c <= 'z' && unicode.IsLetter(secretChar) {
-			result += action('a', c, (secretChar - 'a') % 26)
-        } else {
+		} else {
             result += string(c)
         }
     }

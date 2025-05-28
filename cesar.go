@@ -7,6 +7,15 @@ import (
 	"strings"
 )
 
+type CesarPageData struct {
+	Title string
+	Description string
+	CesarFactor int
+	Call string
+	BtnCall string
+	Btn string
+}
+
 var cesarFactor = func() int {
     factor := os.Getenv("CESARCYPHER")
     shift := 3
@@ -36,11 +45,11 @@ func cesarCipher(m string, action func(rune, rune, rune) string, factor int) str
     return result
 }
 
-func cesarReadRequest(r *http.Request, action func(rune, rune, rune) string) PageData {
+func cesarReadRequest(r *http.Request, action func(rune, rune, rune) string) CipherMessage {
     params := r.URL.Query()
 	message := strings.TrimSpace(params.Get("message"))
 	if message == "" {
-		return PageData{}
+		return CipherMessage{}
 	}
 
 	newFactor, err := strconv.Atoi(params.Get("factor"))
@@ -49,6 +58,6 @@ func cesarReadRequest(r *http.Request, action func(rune, rune, rune) string) Pag
 	}
 
 	cesarMessage := cesarCipher(message, action, abs(newFactor))
-    data := PageData{Message: cesarMessage}
+    data := CipherMessage{Message: cesarMessage}
     return data
 }
