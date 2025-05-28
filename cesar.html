@@ -15,9 +15,13 @@
         </a>
     </div>
 
-    <div class="absolute top-4 right-4">
-        <a href="{{.BtnCall}}" class="flex items-center px-4 py-2 bg-gray-800 text-white rounded-md text-lg font-semibold hover:bg-gray-700 transition">
-            <span class="mr-2">{{.Btn}}</span>
+    <div class="absolute flex top-4 right-4">
+        <a href="{{.BtnCallBack}}" class="flex items-center me-3 px-4 py-2 bg-gray-800 text-white rounded-md text-lg font-semibold hover:bg-gray-700 transition">
+            <i class="bi bi-arrow-left mr-2"></i>
+            <span>{{.BtnBack}}</span>
+        </a>
+        <a href="{{.BtnCallNext}}" class="flex items-center px-4 py-2 bg-gray-800 text-white rounded-md text-lg font-semibold hover:bg-gray-700 transition">
+            <span class="mr-2">{{.BtnNext}}</span>
             <i class="bi bi-arrow-right"></i>
         </a>
     </div>

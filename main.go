@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"html/template"
 	"net/http"
 	"strings"
@@ -28,6 +29,7 @@ type PageData struct {
 
 // HTMLs
 var cesar = template.Must(template.ParseFiles("cesar.html"))
+var cesarBreak = template.Must(template.ParseFiles("break-cesar.html"))
 var vigenere = template.Must(template.ParseFiles("vigenere.html"))
 var cryptLabel = template.Must(template.ParseFiles("crypto-label.html"))
 var index = template.Must(template.ParseFiles("index.html"))
@@ -41,6 +43,33 @@ func cesarEncryptHandler(w http.ResponseWriter, r *http.Request) {
 func cesarDecryptHandler(w http.ResponseWriter, r *http.Request) {
 	data := cesarReadRequest(r, decryptFactor)
 	cryptLabel.Execute(w, data)
+}
+
+type Response struct {
+	Letters []string
+	Factors []int
+}
+
+func cesarBreakHandler(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+
+	message := r.URL.Query().Get("message")
+
+    // Pegando o parâmetro "letters" e dividindo em um array
+    lettersParam := r.URL.Query().Get("letters")
+    letters := strings.Split(lettersParam, ",")
+
+	runes := trackFrequency(message)
+	result := generateFactors(runes, letters)
+
+	responseData := Response{
+        Letters: result.Letters,
+		Factors: result.Factors,
+    }
+
+    if err := json.NewEncoder(w).Encode(responseData); err != nil {
+        http.Error(w, "Erro ao codificar JSON", http.StatusInternalServerError)
+    }
 }
 
 func vigenereEncryptHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,10 +95,25 @@ func cesarEncryptPageHandler(w http.ResponseWriter, r *http.Request) {
 		Description: "",
 		CesarFactor: cesarFactor,
 		Call: "/cesar-lock",
-		BtnCall: "/cesar/decrypt",
-		Btn: "Decriptar",
+		BtnCallBack: "/cesar/decrypt",
+		BtnBack: "Decriptar",
+		BtnCallNext: "/cesar/break",
+		BtnNext: "Break",
 	}
     cesar.Execute(w, data)
+}
+
+func cesarBreakPageHandler(w http.ResponseWriter, r *http.Request) {
+    data := CesarPageData{
+		Title: "Break Cifra de Cesar",
+		Description: "",
+		Call: "/cesar-break",
+		BtnCallBack: "/cesar/encrypt",
+		BtnBack: "Encriptar",
+		BtnCallNext: "/cesar/decrypt",
+		BtnNext: "Decriptar",
+	}
+    cesarBreak.Execute(w, data)
 }
 
 func cesarDecryptPageHandler(w http.ResponseWriter, r *http.Request) {
@@ -78,8 +122,10 @@ func cesarDecryptPageHandler(w http.ResponseWriter, r *http.Request) {
 		Description: "",
 		CesarFactor: cesarFactor,
 		Call: "/cesar-unlock",
-		BtnCall: "/cesar/encrypt",
-		Btn: "Encriptar",
+		BtnCallBack: "/cesar/break",
+		BtnBack: "Break",
+		BtnCallNext: "/cesar/encrypt",
+		BtnNext: "Encriptar",
 	}
     cesar.Execute(w, data)
 }
@@ -116,9 +162,11 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	// Cesar
 	http.HandleFunc("/cesar-lock", cesarEncryptHandler)
+	http.HandleFunc("/cesar-break", cesarBreakHandler)
 	http.HandleFunc("/cesar-unlock", cesarDecryptHandler)
 	http.HandleFunc("/cesar/encrypt", cesarEncryptPageHandler)
 	http.HandleFunc("/cesar/decrypt", cesarDecryptPageHandler)
+	http.HandleFunc("/cesar/break", cesarBreakPageHandler)
 	
 	// Vigenere
 	http.HandleFunc("/vigenere-lock", vigenereEncryptHandler)

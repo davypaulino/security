@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -12,8 +13,10 @@ type CesarPageData struct {
 	Description string
 	CesarFactor int
 	Call string
-	BtnCall string
-	Btn string
+	BtnCallNext string
+	BtnCallBack string
+	BtnNext string
+	BtnBack string
 }
 
 var cesarFactor = func() int {
@@ -60,4 +63,49 @@ func cesarReadRequest(r *http.Request, action func(rune, rune, rune) string) Cip
 	cesarMessage := cesarCipher(message, action, abs(newFactor))
     data := CipherMessage{Message: cesarMessage}
     return data
+}
+
+func trackFrequency(message string) map[rune] int {
+	runes := make(map[rune]int)
+	for _, c := range strings.ToUpper(message) {
+        if c >= 'A' && c <= 'Z' {
+            runes[c]++
+        }
+    }
+	return runes
+}
+
+type FactorsCesar struct {
+    Factors []int
+    Letters []string
+}
+
+func generateFactors(runes map[rune]int, letters []string) FactorsCesar {
+    type pair struct {
+        letter rune
+        freq  int
+    }
+    pairs := make([]pair, 0, len(runes))
+
+    for letter, freq := range runes {
+        pairs = append(pairs, pair{letter, freq})
+    }
+
+    sort.SliceStable(pairs, func(i, j int) bool {
+        return pairs[i].freq > pairs[j].freq
+    })
+
+    moreFreqLetters := make([]string, 0, len(pairs))
+    for _, p := range pairs {
+        moreFreqLetters = append(moreFreqLetters, string(p.letter))
+    }
+
+    result := make([]int, len(letters))
+    for i := range letters {
+        if len(letters[i]) > 0 {
+            result[i] = int(moreFreqLetters[i][0]) - int(letters[i][0])
+        }
+    }
+
+    return FactorsCesar{Factors: result, Letters: moreFreqLetters[:len(letters)]}
 }
