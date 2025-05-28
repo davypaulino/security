@@ -75,7 +75,7 @@
         }
 
         function copyToClipboard() {
-            let outputText = document.getElementById("output").innerText;
+            let outputText = document.getElementById("output").value;
             
             navigator.clipboard.writeText(outputText).then(() => {
                 let toast = document.getElementById("toast");
