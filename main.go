@@ -12,8 +12,10 @@ type VigenerePageData struct {
 	Description string
 	SecretKey string
 	Call string
-	BtnCall string
-	Btn string
+	BtnCallBack string
+	BtnBack string
+	BtnCallNext string
+	BtnNext string
 }
 
 type PageData struct {
@@ -100,19 +102,45 @@ func cesarBreakHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func vigenereEncryptHandler(w http.ResponseWriter, r *http.Request) {
-	params := r.URL.Query()
-	message := strings.TrimSpace(params.Get("message"))
-	secret := strings.TrimSpace(params.Get("secret"))
+	if r.Method != http.MethodPost {
+        http.Error(w, "Método não permitido. Use POST.", http.StatusMethodNotAllowed)
+        return
+    }
+
+    var req VigenereRequest
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Erro ao ler JSON da requisição", http.StatusBadRequest)
+        return
+    }
+
+	message := strings.TrimSpace(req.Message)
+	secret := strings.TrimSpace(req.Secret)
+
 	data := CipherMessage{Message: vigenereCipher(message, secret, encryptFactor)}
-	cryptLabel.Execute(w, data)
+    if err := json.NewEncoder(w).Encode(data); err != nil {
+        http.Error(w, "Erro ao codificar JSON", http.StatusInternalServerError)
+    }
 }
 
 func vigenereDecryptHandler(w http.ResponseWriter, r *http.Request) {
-	params := r.URL.Query()
-	message := strings.TrimSpace(params.Get("message"))
-	secret := strings.TrimSpace(params.Get("secret"))
+	if r.Method != http.MethodPost {
+        http.Error(w, "Método não permitido. Use POST.", http.StatusMethodNotAllowed)
+        return
+    }
+
+    var req VigenereRequest
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Erro ao ler JSON da requisição", http.StatusBadRequest)
+        return
+    }
+
+	message := strings.TrimSpace(req.Message)
+	secret := strings.TrimSpace(req.Secret)
+
 	data := CipherMessage{Message: vigenereCipher(message, secret, decryptFactor)}
-	cryptLabel.Execute(w, data)
+    if err := json.NewEncoder(w).Encode(data); err != nil {
+        http.Error(w, "Erro ao codificar JSON", http.StatusInternalServerError)
+    }
 }
 
 // Page Handlers
@@ -163,8 +191,10 @@ func vigenereEncryptPageHandler(w http.ResponseWriter, r *http.Request) {
 		Description: "",
 		SecretKey: vigenereSecret,
 		Call: "/vigenere-lock",
-		BtnCall: "/vigenere/decrypt",
-		Btn: "Decriptar",
+		BtnCallBack: "/vigenere/decrypt",
+		BtnBack: "Decriptar",
+		BtnCallNext: "/vigenere/decrypt",
+		BtnNext: "Decriptar",
 	}
 	vigenere.Execute(w, data)
 }
@@ -175,8 +205,10 @@ func vigenereDecryptPageHandler(w http.ResponseWriter, r *http.Request) {
 		Description: "",
 		SecretKey: vigenereSecret,
 		Call: "/vigenere-unlock",
-		BtnCall: "/vigenere/encrypt",
-		Btn: "Encriptar",
+		BtnCallBack: "/vigenere/encrypt",
+		BtnBack: "Encriptar",
+		BtnCallNext: "/vigenere/encrypt",
+		BtnNext: "Encriptar",
 	}
 	vigenere.Execute(w, data)
 }

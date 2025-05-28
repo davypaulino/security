@@ -15,9 +15,13 @@
         </a>
     </div>
 
-    <div class="absolute top-4 right-4">
-        <a href="{{.BtnCall}}" class="flex items-center px-4 py-2 bg-gray-800 text-white rounded-md text-lg font-semibold hover:bg-gray-700 transition">
-            <span class="mr-2">{{.Btn}}</span>
+    <div class="absolute flex top-4 right-4">
+        <a href="{{.BtnCallBack}}" class="flex items-center me-3 px-4 py-2 bg-gray-800 text-white rounded-md text-lg font-semibold hover:bg-gray-700 transition">
+            <i class="bi bi-arrow-left mr-2"></i>
+            <span>{{.BtnBack}}</span>
+        </a>
+        <a href="{{.BtnCallNext}}" class="flex items-center px-4 py-2 bg-gray-800 text-white rounded-md text-lg font-semibold hover:bg-gray-700 transition">
+            <span class="mr-2">{{.BtnNext}}</span>
             <i class="bi bi-arrow-right"></i>
         </a>
     </div>
@@ -53,18 +57,36 @@
         Copiado com sucesso!
     </div>
 
+    <div id="toast-error" class="fixed bottom-4 right-4 bg-red-600 text-white py-2 px-4 rounded-md opacity-0 transition-opacity">
+        Error ao Processar
+    </div>
+
     <script>
         document.getElementById("userInput").addEventListener("input", async function() {
             call(this.value, document.getElementById("secretInput").value);
         });
 
-        async function call(query, key) {
+        async function call(query, secret) {
             try {
-                let response = await fetch(`{{.Call}}?message=${query}&secret=${key}`);
-                let data = await response.text();
-                document.getElementById("output").innerHTML = data;
+                let response = await fetch(`{{.Call}}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: query,
+                        secret: secret
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro: ${response.status}`);
+                }
+
+                let data = await response.json();
+                document.getElementById("output").innerHTML = data.message;
             } catch (error) {
-                document.getElementById("output").textContent = "Erro ao buscar dados.";
+                toastError()
             }
         }
 
@@ -76,6 +98,12 @@
                 toast.classList.remove("opacity-0");
                 setTimeout(() => toast.classList.add("opacity-0"), 2000);
             }).catch(err => console.error("Erro ao copiar:", err));
+        }
+
+        function toastError() {
+            let toast = document.getElementById("toast-error");
+            toast.classList.remove("opacity-0");
+            setTimeout(() => toast.classList.add("opacity-0"), 2000);
         }
     </script>
 </body>

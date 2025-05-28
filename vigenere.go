@@ -6,6 +6,11 @@ import (
 	"unicode"
 )
 
+type VigenereRequest struct {
+    Message string `json:"message"`
+    Secret  string `json:"secret"`
+}
+
 var vigenereSecret = func() string {
     envSecret := os.Getenv("VIGENERE_SECRET")
     secret := "a"
